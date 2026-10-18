@@ -100,7 +100,7 @@ class BattleshipGame:
         probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             probe.connect(("10.255.255.255", 1))
-            my_ip = probe.getsockname()
+            my_ip = probe.getsockname()[0]
         except OSError:
             my_ip = None
         finally:
@@ -203,7 +203,6 @@ class BattleshipGame:
         else:
             self.turn_label.config(text="ХОД СОПЕРНИКА", fg="red")
 
-
     # ==================== ЛОГИКА ИГРЫ ====================
     def on_enemy_cell_click(self, r, c):
         if not self.my_turn:
@@ -233,4 +232,38 @@ class BattleshipGame:
         self.root.after(100, self.check_network)
 
     def process_network_message(self, msg):
-        pass  # Обработка команд будет добавлена в финальном коммите
+        if msg.startswith("SHOT:"):
+            coords = msg.split(":")
+            r, c = map(int, coords[1].split(","))
+            if self.my_field[r][c] == 1:  # Попал
+                self.my_field[r][c] = 3
+                self.my_buttons[r][c].config(bg="red", text="X")
+                self.conn.sendall(f"RES:{r},{c},HIT".encode('utf-8'))
+                self.my_turn = False
+                self.check_game_over_loss()
+            else:  # Мимо
+                self.my_field[r][c] = 2
+                self.my_buttons[r][c].config(bg="#B0BEC5", text="•")
+                self.conn.sendall(f"RES:{r},{c},MISS".encode('utf-8'))
+                self.my_turn = True
+        elif msg.startswith("RES:"):
+            parts = msg.split(" ")[1].split(",")
+            r, c = int(parts[0]), int(parts[1])
+            result = parts[2]
+            if result == "HIT":
+                self.enemy_field[r][c] = 3
+                self.enemy_buttons[r][c].config(bg="red", text="X")
+                self.my_turn = True
+            else:
+                self.enemy_field[r][c] = 2
+                self.enemy_buttons[r][c].config(bg="#B0BEC5", text="•")
+                self.my_turn = False
+                self.update_turn_label()
+
+    def check_game_over_loss(self):
+        for row in self.my_field:
+            if 1 in row:
+                return
+
+        messagebox.showinfo("Игра окончена", "Вы проиграли! Все ваши корабли уничтожены.")
+        self.root.destroy()
