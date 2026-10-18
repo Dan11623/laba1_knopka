@@ -108,7 +108,7 @@ class BattleshipGame:
 
         targets = ["255.255.255.255"]
         if my_ip:
-            targets.append(my_ip.rsplit(".", 1) + ".255")
+            targets.append(my_ip.rsplit(".", 1)[0] + ".255")
 
         # 2. UDP broadcast: 20 попыток × 2 адреса
         udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -131,7 +131,7 @@ class BattleshipGame:
                 try:
                     data, addr = udp_sock.recvfrom(1024)
                     if data == b"HERE_IS_BATTLESHIP_SERVER":
-                        server_ip = addr
+                        server_ip = addr[0]
                         break
                 except socket.timeout:
                     continue
@@ -203,9 +203,34 @@ class BattleshipGame:
         else:
             self.turn_label.config(text="ХОД СОПЕРНИКА", fg="red")
 
+
     # ==================== ЛОГИКА ИГРЫ ====================
     def on_enemy_cell_click(self, r, c):
-        pass  # Будет добавлено в следующем коммите
+        if not self.my_turn:
+            return
+        if self.enemy_field[r][c] != 0:
+            return
+        try:
+            msg = f"SHOT:{r},{c}"
+            self.conn.sendall(msg.encode('utf-8'))
+            self.my_turn = False
+            self.update_turn_label()
+        except Exception:
+            messagebox.showerror("Ошибка", "Связь потеряна.")
 
     def check_network(self):
-        pass  # Будет добавлено в следующем коммите
+        try:
+            data = self.conn.recv(1024)
+            if data:
+                msg = data.decode('utf-8')
+                self.process_network_message(msg)
+        except BlockingIOError:
+            pass
+        except Exception:
+            messagebox.showerror("Ошибка", "Соединение разорвано.")
+            self.root.destroy()
+            return
+        self.root.after(100, self.check_network)
+
+    def process_network_message(self, msg):
+        pass  # Обработка команд будет добавлена в финальном коммите
