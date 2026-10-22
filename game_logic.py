@@ -247,7 +247,8 @@ class BattleshipGame:
                 self.conn.sendall(f"RES:{r},{c},MISS".encode('utf-8'))
                 self.my_turn = True
         elif msg.startswith("RES:"):
-            parts = msg.split(" ")[1].split(",")
+            # Формат ответа: RES:строка,столбец,результат (без пробелов)
+            parts = msg.split(":")[1].split(",")
             r, c = int(parts[0]), int(parts[1])
             result = parts[2]
             if result == "HIT":
@@ -258,7 +259,8 @@ class BattleshipGame:
                 self.enemy_field[r][c] = 2
                 self.enemy_buttons[r][c].config(bg="#B0BEC5", text="•")
                 self.my_turn = False
-                self.update_turn_label()
+        # Обновляем надпись хода после любого сообщения
+        self.update_turn_label()
 
     def check_game_over_loss(self):
         for row in self.my_field:
