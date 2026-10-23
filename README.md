@@ -8,7 +8,7 @@
 
 Игра собрана в один исполняемый файл. Вам не нужно устанавливать Python или сторонние библиотеки, достаточно просто скачать и запустить:
 
-[Скачать Battleship_Game.exe](https://github.com/Dan11623/laba1_knopka/releases/download/v1.0.0/main.exe)
+[Скачать Battleship_Game.exe](https://github.com/Dan11623/laba1_knopka/releases/download/v.1.0.1/Battleship_Game.exe)
 
 ---
 
